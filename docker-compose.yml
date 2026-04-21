@@ -6,6 +6,10 @@ services:
     image: mysql:8
     container_name: identity-mysql
     restart: always
+    healthcheck:
+      test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost" ]
+      timeout: 5s
+      retries: 10
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: identity_db
@@ -13,9 +17,12 @@ services:
       - "3306:3306"
 
   identity-service:
-    build: ./identity-service
+    build:
+      context: .
+      dockerfile: identity-service/Dockerfile
     container_name: identity-service
     ports:
       - "8081:8080"
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
