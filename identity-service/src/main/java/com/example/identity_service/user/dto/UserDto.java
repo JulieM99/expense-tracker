@@ -1,4 +1,4 @@
-package com.example.identity_service.authentication.dto;
+package com.example.identity_service.user.dto;
 
 import com.example.identity_service.authentication.Role;
 import com.fasterxml.jackson.annotation.JsonInclude;

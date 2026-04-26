@@ -1,5 +1,7 @@
-package com.example.identity_service.authentication;
+package com.example.identity_service.user;
 
+import com.example.identity_service.authentication.Role;
+import com.example.identity_service.authentication.Token;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;

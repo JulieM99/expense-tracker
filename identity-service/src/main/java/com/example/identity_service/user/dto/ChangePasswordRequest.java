@@ -1,4 +1,4 @@
-package com.example.identity_service.authentication.dto;
+package com.example.identity_service.user.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;

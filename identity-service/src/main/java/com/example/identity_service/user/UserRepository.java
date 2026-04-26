@@ -1,4 +1,4 @@
-package com.example.identity_service.authentication;
+package com.example.identity_service.user;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;

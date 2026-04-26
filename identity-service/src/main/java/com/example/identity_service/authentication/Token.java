@@ -1,6 +1,7 @@
 package com.example.identity_service.authentication;
 
 
+import com.example.identity_service.user.User;
 import jakarta.persistence.*;
 import lombok.*;
 

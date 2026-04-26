@@ -1,6 +1,7 @@
-package com.example.identity_service.authentication;
+package com.example.identity_service.user;
+import com.example.identity_service.authentication.Role;
 import com.example.identity_service.authentication.dto.RegisterRequest;
-import com.example.identity_service.authentication.dto.UserDto;
+import com.example.identity_service.user.dto.UserDto;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")

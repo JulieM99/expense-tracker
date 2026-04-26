@@ -3,6 +3,11 @@ package com.example.identity_service.authentication;
 import com.example.identity_service.authentication.dto.*;
 import com.example.identity_service.error.exception.ConflictException;
 import com.example.identity_service.error.exception.UnauthorizedException;
+import com.example.identity_service.user.User;
+import com.example.identity_service.user.UserMapper;
+import com.example.identity_service.user.UserRepository;
+import com.example.identity_service.user.dto.ChangePasswordRequest;
+import com.example.identity_service.user.dto.UserDto;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -34,11 +39,11 @@ public class AuthenticationService {
     @Transactional
     public RegisterResponse register(@Valid RegisterRequest request)  {
 
-        log.info("SERVICE register start email={}", request.email());
+        log.info("AUTHENTICATION SERVICE register start email={}", request.email());
 
         userRepository.findByEmail(request.email())
                 .ifPresent(u -> {
-                    log.warn("SERVICE register FAILED (email exists) email={}", request.email());
+                    log.warn("AUTHENTICATION SERVICE register FAILED (email exists) email={}", request.email());
                     throw new ConflictException("User with this e-mail already exists");
                 });
 
@@ -51,38 +56,29 @@ public class AuthenticationService {
 
         UserDto userDto = userMapper.toDto(user);
 
-        log.info("SERVICE user created id={} email={}", user.getId(), user.getEmail());
+        log.info("AUTHENTICATION SERVICE user created id={} email={}", user.getId(), user.getEmail());
 
         return new RegisterResponse(jwtToken, refreshToken, userDto);
-    }
-
-    public UserDto getCurrentUser(Authentication authentication) {
-        String email = authentication.getName();
-
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        return userMapper.toDto(user);
     }
 
     @Transactional
     public AuthenticationResponse authenticate(@Valid AuthenticationRequest request) {
 
-        log.info("SERVICE login attempt email={}", request.email());
+        log.info("AUTHENTICATION SERVICE login attempt email={}", request.email());
 
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.email(), request.password())
             );
         } catch (Exception e) {
-            log.warn("SERVICE login FAILED email={}", request.email());
+            log.warn("AUTHENTICATION SERVICE login FAILED email={}", request.email());
             throw new UnauthorizedException("Invalid email or password");
         }
 
         User user = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> new UnauthorizedException("Invalid email or password"));
 
-        log.info("SERVICE login SUCCESS email={}", request.email());
+        log.info("AUTHENTICATION SERVICE login SUCCESS email={}", request.email());
 
         return new AuthenticationResponse(
                 jwtService.generateToken(user),
@@ -94,7 +90,7 @@ public class AuthenticationService {
     @Transactional
     public AuthenticationResponse refreshToken(String token) {
 
-        log.info("SERVICE refresh attempt");
+        log.info("AUTHENTICATION SERVICE refresh attempt");
 
         Token storedToken = tokenRepository.findByRefreshToken(token)
                 .orElseThrow(() -> new UnauthorizedException("Invalid refresh token"));
@@ -133,25 +129,12 @@ public class AuthenticationService {
     @Transactional
     public void logout(String refreshToken) {
 
-        log.info("SERVICE logout");
+        log.info("AUTHENTICATION SERVICE logout");
 
         Token token = tokenRepository.findByRefreshToken(refreshToken)
                 .orElseThrow(() -> new UnauthorizedException("Invalid refresh token"));
 
         tokenRepository.delete(token);
-    }
-
-    @Transactional
-    public void changePassword(User user, ChangePasswordRequest request) {
-
-        log.info("SERVICE changePassword userId={}", user.getId());
-
-        if (!passwordEncoder.matches(request.oldPassword(), user.getPasswordHash())) {
-            throw new UnauthorizedException("Invalid old password");
-        }
-
-        user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
-        userRepository.save(user);
     }
 
 }

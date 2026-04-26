@@ -2,6 +2,10 @@ package com.example.identity_service.authentication;
 
 import com.example.identity_service.authentication.dto.*;
 import com.example.identity_service.error.ApiError;
+import com.example.identity_service.user.User;
+import com.example.identity_service.user.UserMapper;
+import com.example.identity_service.user.dto.ChangePasswordRequest;
+import com.example.identity_service.user.dto.UserDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -12,7 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -50,59 +53,6 @@ public class AuthenticationController {
         var response = authenticationService.register(request);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
-    }
-
-    @Operation(
-            summary = "Get current authenticated user",
-            description = "Returns information about the currently authenticated user based on the provided JWT access token.",
-            responses = {
-                    @ApiResponse(
-                            responseCode = "200",
-                            description = "User successfully retrieved",
-                            content = @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = UserDto.class)
-                            )
-                    ),
-                    @ApiResponse(
-                            responseCode = "401",
-                            description = "Missing or invalid JWT token",
-                            content = @Content(schema = @Schema(implementation = ApiError.class))
-                    )
-            }
-    )
-    @GetMapping("/me")
-    public ResponseEntity<UserDto> me(Authentication authentication) {
-        return ResponseEntity.ok(authenticationService.getCurrentUser(authentication));
-    }
-
-    @Operation(
-            summary = "Change user password",
-            description = "Allows authenticated user to change their password by providing old and new password. Requires valid JWT access token.",
-            responses = {
-                    @ApiResponse(
-                            responseCode = "204",
-                            description = "Password successfully changed"
-                    ),
-                    @ApiResponse(
-                            responseCode = "401",
-                            description = "Invalid or expired token / wrong old password",
-                            content = @Content(schema = @Schema(implementation = ApiError.class))
-                    ),
-                    @ApiResponse(
-                            responseCode = "400",
-                            description = "Invalid request data",
-                            content = @Content(schema = @Schema(implementation = ApiError.class))
-                    )
-            }
-    )
-    @PostMapping("/change-password")
-    public ResponseEntity<Void> changePassword(Authentication authentication, @Valid @RequestBody ChangePasswordRequest request) {
-        User user = (User) authentication.getPrincipal();
-
-        authenticationService.changePassword(user, request);
-
-        return ResponseEntity.noContent().build();
     }
 
     @PostMapping

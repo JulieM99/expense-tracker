@@ -1,6 +1,7 @@
 package com.example.identity_service.authentication;
 
 
+import com.example.identity_service.user.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;

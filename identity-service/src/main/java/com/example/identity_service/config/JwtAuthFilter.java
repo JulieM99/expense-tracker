@@ -1,9 +1,9 @@
 package com.example.identity_service.config;
 
 import com.example.identity_service.authentication.JwtService;
-import com.example.identity_service.authentication.UserRepository;
+import com.example.identity_service.user.UserRepository;
 import com.example.identity_service.error.ApiError;
-import com.example.identity_service.authentication.User;
+import com.example.identity_service.user.User;
 
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
@@ -36,23 +36,29 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         final String authHeader = request.getHeader("Authorization");
 
+        // sprawdzenie czy to JWT request
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
+        //wyciagniecie jwt
         final String jwt = authHeader.substring(7);
 
         try {
+            // dekodowanie jwt, wyciagniecie e-maila
             final String userEmail = jwtService.extractUsername(jwt);
 
+            // czy user jest juz zalogowany
             if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
                 User userDetails = userRepository.findByEmail(userEmail)
                         .orElse(null);
 
+                // sprawdzenie pobranego usera i czy jwt token jest wazny
                 if (userDetails != null && jwtService.isTokenValid(jwt, userDetails)) {
 
+                    // utworzenie authentication object
                     UsernamePasswordAuthenticationToken authToken =
                             new UsernamePasswordAuthenticationToken(
                                     userDetails,
@@ -64,6 +70,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                             new WebAuthenticationDetailsSource().buildDetails(request)
                     );
 
+                    //security context - spring wie ze user jest zalogowasny od teraz i teraz idziemy do tego security configni sprawdzamy endpinty
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 }
             }
