@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -135,6 +136,40 @@ public class GlobalExceptionHandler {
         body.put("path", "/api");
 
         return new ResponseEntity<>(body, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ApiResponse(
+            responseCode = "400",
+            description = "Validation error",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(
+                            example = "{\n" +
+                                    "  \"timestamp\": \"2025-03-12T19:46:16.392\",\n" +
+                                    "  \"status\": 400,\n" +
+                                    "  \"errors\": {\n" +
+                                    "    \"lastName\": \"Last name is required\",\n" +
+                                    "    \"email\": \"Invalid email format\"\n" +
+                                    "  }\n" +
+                                    "}"
+                    )
+            )
+    )
+    public ResponseEntity<Object> handleValidationExceptions(MethodArgumentNotValidException ex) {
+
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", HttpStatus.BAD_REQUEST.value());
+
+        Map<String, String> errors = new LinkedHashMap<>();
+        ex.getBindingResult().getFieldErrors().forEach(error ->
+                errors.put(error.getField(), error.getDefaultMessage())
+        );
+
+        body.put("errors", errors);
+
+        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
     }
 
 }
