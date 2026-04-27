@@ -31,9 +31,7 @@ import java.util.UUID;
 @Slf4j
 public class AuthenticationService {
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
+    private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
     private final TokenRepository tokenRepository;
     private final PasswordResetTokenRepository passwordResetTokenRepository;

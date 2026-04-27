@@ -16,6 +16,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -25,10 +26,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final UserRepository userRepository;
+    private final ObjectMapper objectMapper;
 
-    public JwtAuthFilter(JwtService jwtService, UserRepository userRepository) {
+    public JwtAuthFilter(JwtService jwtService, UserRepository userRepository, ObjectMapper objectMapper) {
         this.jwtService = jwtService;
         this.userRepository = userRepository;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -84,8 +87,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
     }
 
-    private void writeError(HttpServletResponse response, HttpServletRequest request, String message)
-            throws IOException {
+    private void writeError(HttpServletResponse response,
+                            HttpServletRequest request,
+                            String message) throws IOException {
 
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json");
@@ -94,24 +98,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 request.getRequestURI(),
                 message,
                 HttpServletResponse.SC_UNAUTHORIZED,
-                LocalDateTime.now()
+                LocalDateTime.now(),
+                null
         );
 
-        String json = """
-            {
-              "path": "%s",
-              "message": "%s",
-              "status": %d,
-              "timestamp": "%s"
-            }
-            """.formatted(
-                apiError.path(),
-                apiError.message(),
-                apiError.status(),
-                apiError.timestamp()
-        );
-
-        response.getWriter().write(json);
-        response.getWriter().flush();
+        response.getWriter().write(objectMapper.writeValueAsString(apiError));
     }
 }

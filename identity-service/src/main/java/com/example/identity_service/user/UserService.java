@@ -1,7 +1,7 @@
 package com.example.identity_service.user;
 
-import com.example.identity_service.common.email.EmailService;
 import com.example.identity_service.common.event.UserDeleteEvent;
+import com.example.identity_service.error.exception.NotFoundException;
 import com.example.identity_service.error.exception.UnauthorizedException;
 import com.example.identity_service.user.dto.ChangePasswordRequest;
 import com.example.identity_service.user.dto.UpdateUserRequest;
@@ -12,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -28,14 +27,9 @@ public class UserService {
     private final UserMapper userMapper;
     private final ApplicationEventPublisher eventPublisher;
 
-    public UserDto getCurrentUser(Authentication authentication) {
+    public UserDto getCurrentUser(User user) {
 
-        log.info("USER SERVICE getCurrentUser user emial={}", authentication.getName());
-
-        String email = authentication.getName();
-
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        log.info("USER SERVICE getCurrentUser user emial={}", user.getEmail());
 
         return userMapper.toDto(user);
     }
@@ -50,36 +44,35 @@ public class UserService {
         }
 
         user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
+
         userRepository.save(user);
     }
 
     @Transactional
     public UserDto updateUser(User user, @Valid UpdateUserRequest request) {
 
-        log.info("USER SERVICE updateUser userId={}", user.getId());
-
         user.setFirstName(request.firstName());
         user.setLastName(request.lastName());
 
         User saved = userRepository.save(user);
 
+        log.info("USER SERVICE successfully updatedUser - userId={}", user.getId());
+
         return userMapper.toDto(saved);
     }
 
     @Transactional
-    public void deleteUser(Authentication authentication) {
+    public void deleteUser(User user) {
 
-        String email = authentication.getName();
+        log.info("USER SERVICE deleteUser userId={}", user.getId());
 
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        log.info("USER SERVICE deleteAccount userId={}", user.getId());
+        User existing = userRepository.findById(user.getId())
+                .orElseThrow(() -> new NotFoundException("User not found"));
 
         eventPublisher.publishEvent(
-                new UserDeleteEvent(user.getEmail(), user.getFirstName())
+                new UserDeleteEvent(existing.getEmail(), existing.getFirstName())
         );
 
-        userRepository.delete(user);
+        userRepository.delete(existing);
     }
 }

@@ -1,6 +1,7 @@
 package com.example.identity_service.config;
 
 import com.example.identity_service.user.UserRepository;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -70,6 +71,15 @@ public class SecurityConfig {
                         ).permitAll()
                         .requestMatchers("/api/users/**").authenticated()
                         .anyRequest().authenticated()
+                )
+
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+                        })
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            response.sendError(HttpServletResponse.SC_FORBIDDEN);
+                        })
                 )
 
                 .httpBasic(AbstractHttpConfigurer::disable)

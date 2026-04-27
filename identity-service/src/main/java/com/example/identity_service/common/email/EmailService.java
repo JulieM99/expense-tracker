@@ -6,8 +6,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.mail.javamail.JavaMailSender;
 
 
-//todo: zrobic entity do tokenow z reset password i wysylke maila z tym resetem
-//testy tego wszytewkigo
 @Service
 @RequiredArgsConstructor
 public class EmailService {

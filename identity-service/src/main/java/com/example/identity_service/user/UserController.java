@@ -1,8 +1,6 @@
 package com.example.identity_service.user;
 
 
-import com.example.identity_service.authentication.AuthenticationService;
-import com.example.identity_service.authentication.dto.RefreshTokenRequest;
 import com.example.identity_service.error.ApiError;
 import com.example.identity_service.user.dto.ChangePasswordRequest;
 import com.example.identity_service.user.dto.UpdateUserRequest;
@@ -48,7 +46,9 @@ public class UserController {
     )
     @GetMapping("/me")
     public ResponseEntity<UserDto> me(Authentication authentication) {
-        return ResponseEntity.ok(userService.getCurrentUser(authentication));
+        User user = (User) authentication.getPrincipal();
+
+        return ResponseEntity.ok(userService.getCurrentUser(user));
     }
 
     @Operation(
@@ -125,7 +125,8 @@ public class UserController {
     )
     @DeleteMapping("/me")
     public ResponseEntity<Void> deleteUser(Authentication authentication) {
-        userService.deleteUser(authentication);
+        User user = (User) authentication.getPrincipal();
+        userService.deleteUser(user);
 
         return ResponseEntity.noContent().build();
     }

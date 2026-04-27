@@ -2,10 +2,6 @@ package com.example.identity_service.authentication;
 
 import com.example.identity_service.authentication.dto.*;
 import com.example.identity_service.error.ApiError;
-import com.example.identity_service.user.User;
-import com.example.identity_service.user.UserMapper;
-import com.example.identity_service.user.dto.ChangePasswordRequest;
-import com.example.identity_service.user.dto.UserDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -15,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
