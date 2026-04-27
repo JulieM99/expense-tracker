@@ -4,6 +4,7 @@ import com.example.identity_service.error.exception.*;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -31,14 +32,16 @@ public class GlobalExceptionHandler {
                             "}"
             ))
     )
-    public ResponseEntity<Object> handleBadRequestException(BadRequestException e) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now());
-        body.put("message", e.getMessage());
-        body.put("status", HttpStatus.BAD_REQUEST.value());
-        body.put("path", "/api");
+    public ResponseEntity<ApiError> handleBadRequestException(BadRequestException e, HttpServletRequest request) {
+        ApiError error = new ApiError(
+                request.getRequestURI(),
+                e.getMessage(),
+                HttpStatus.BAD_REQUEST.value(),
+                LocalDateTime.now(),
+                null
+        );
 
-        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
     @ExceptionHandler(ConflictException.class)
@@ -55,14 +58,17 @@ public class GlobalExceptionHandler {
                             "}"
             ))
     )
-    public ResponseEntity<Object> handleConflictException(ConflictException e) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now());
-        body.put("message", e.getMessage());
-        body.put("status", HttpStatus.CONFLICT.value());
-        body.put("path", "/api");
+    public ResponseEntity<ApiError> handleConflictException(ConflictException e, HttpServletRequest request) {
 
-        return new ResponseEntity<>(body, HttpStatus.CONFLICT);
+        ApiError error = new ApiError(
+                request.getRequestURI(),
+                e.getMessage(),
+                HttpStatus.CONFLICT.value(),
+                LocalDateTime.now(),
+                null
+        );
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
 
     @ExceptionHandler(ForbiddenException.class)
@@ -79,15 +85,17 @@ public class GlobalExceptionHandler {
                             "}"
             ))
     )
-    public ResponseEntity<Object> handleForbiddenException(ForbiddenException e) {
+    public ResponseEntity<ApiError> handleForbiddenException(ForbiddenException e, HttpServletRequest request) {
 
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now());
-        body.put("message", e.getMessage());
-        body.put("status", HttpStatus.FORBIDDEN.value());
-        body.put("path", "/api");
+        ApiError error = new ApiError(
+                request.getRequestURI(),
+                e.getMessage(),
+                HttpStatus.FORBIDDEN.value(),
+                LocalDateTime.now(),
+                null
+        );
 
-        return new ResponseEntity<>(body, HttpStatus.FORBIDDEN);
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
     }
 
     @ExceptionHandler(NotFoundException.class)
@@ -104,14 +112,16 @@ public class GlobalExceptionHandler {
                             "}"
             ))
     )
-    public ResponseEntity<Object> handleNotFoundException(NotFoundException e) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now());
-        body.put("message", e.getMessage());
-        body.put("status", HttpStatus.NOT_FOUND.value());
-        body.put("path", "/api");
+    public ResponseEntity<ApiError> handleNotFoundException(NotFoundException e, HttpServletRequest request) {
+        ApiError error = new ApiError(
+                request.getRequestURI(),
+                e.getMessage(),
+                HttpStatus.NOT_FOUND.value(),
+                LocalDateTime.now(),
+                null
+        );
 
-        return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
     @ExceptionHandler(UnauthorizedException.class)
@@ -128,14 +138,16 @@ public class GlobalExceptionHandler {
                             "}"
             ))
     )
-    public ResponseEntity<Object> handleUnauthorizedException(UnauthorizedException e) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now());
-        body.put("message", e.getMessage());
-        body.put("status", HttpStatus.UNAUTHORIZED.value());
-        body.put("path", "/api");
+    public ResponseEntity<ApiError> handleUnauthorizedException(UnauthorizedException e, HttpServletRequest request) {
+        ApiError error = new ApiError(
+                request.getRequestURI(),
+                e.getMessage(),
+                HttpStatus.UNAUTHORIZED.value(),
+                LocalDateTime.now(),
+                null
+        );
 
-        return new ResponseEntity<>(body, HttpStatus.UNAUTHORIZED);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -156,20 +168,22 @@ public class GlobalExceptionHandler {
                     )
             )
     )
-    public ResponseEntity<Object> handleValidationExceptions(MethodArgumentNotValidException ex) {
-
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now());
-        body.put("status", HttpStatus.BAD_REQUEST.value());
+    public ResponseEntity<ApiError> handleValidation(MethodArgumentNotValidException ex, HttpServletRequest request) {
 
         Map<String, String> errors = new LinkedHashMap<>();
-        ex.getBindingResult().getFieldErrors().forEach(error ->
-                errors.put(error.getField(), error.getDefaultMessage())
+        ex.getBindingResult().getFieldErrors().forEach(err ->
+                errors.put(err.getField(), err.getDefaultMessage())
         );
 
-        body.put("errors", errors);
+        ApiError error = new ApiError(
+                request.getRequestURI(),
+                "Validation failed",
+                HttpStatus.BAD_REQUEST.value(),
+                LocalDateTime.now(),
+                errors
+        );
 
-        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
+        return ResponseEntity.badRequest().body(error);
     }
 
 }
