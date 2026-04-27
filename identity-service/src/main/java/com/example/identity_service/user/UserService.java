@@ -1,6 +1,7 @@
 package com.example.identity_service.user;
 
-import com.example.identity_service.authentication.TokenRepository;
+import com.example.identity_service.common.email.EmailService;
+import com.example.identity_service.common.event.UserDeleteEvent;
 import com.example.identity_service.error.exception.UnauthorizedException;
 import com.example.identity_service.user.dto.ChangePasswordRequest;
 import com.example.identity_service.user.dto.UpdateUserRequest;
@@ -10,6 +11,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -24,6 +26,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final ApplicationEventPublisher eventPublisher;
 
     public UserDto getCurrentUser(Authentication authentication) {
 
@@ -61,5 +64,22 @@ public class UserService {
         User saved = userRepository.save(user);
 
         return userMapper.toDto(saved);
+    }
+
+    @Transactional
+    public void deleteUser(Authentication authentication) {
+
+        String email = authentication.getName();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        log.info("USER SERVICE deleteAccount userId={}", user.getId());
+
+        eventPublisher.publishEvent(
+                new UserDeleteEvent(user.getEmail(), user.getFirstName())
+        );
+
+        userRepository.delete(user);
     }
 }

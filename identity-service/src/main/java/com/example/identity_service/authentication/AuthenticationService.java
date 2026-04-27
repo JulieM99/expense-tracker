@@ -1,25 +1,29 @@
 package com.example.identity_service.authentication;
 
 import com.example.identity_service.authentication.dto.*;
+import com.example.identity_service.common.event.PasswordResetRequestedEvent;
+import com.example.identity_service.common.event.UserRegisteredEvent;
 import com.example.identity_service.error.exception.ConflictException;
+import com.example.identity_service.error.exception.NotFoundException;
 import com.example.identity_service.error.exception.UnauthorizedException;
 import com.example.identity_service.user.User;
 import com.example.identity_service.user.UserMapper;
 import com.example.identity_service.user.UserRepository;
-import com.example.identity_service.user.dto.ChangePasswordRequest;
 import com.example.identity_service.user.dto.UserDto;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 
 @Service
@@ -32,9 +36,11 @@ public class AuthenticationService {
 
     private final UserRepository userRepository;
     private final TokenRepository tokenRepository;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final UserMapper userMapper;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public RegisterResponse register(@Valid RegisterRequest request)  {
@@ -57,6 +63,10 @@ public class AuthenticationService {
         UserDto userDto = userMapper.toDto(user);
 
         log.info("AUTHENTICATION SERVICE user created id={} email={}", user.getId(), user.getEmail());
+
+        eventPublisher.publishEvent(
+                new UserRegisteredEvent(user.getEmail(), user.getFirstName())
+        );
 
         return new RegisterResponse(jwtToken, refreshToken, userDto);
     }
@@ -135,6 +145,70 @@ public class AuthenticationService {
                 .orElseThrow(() -> new UnauthorizedException("Invalid refresh token"));
 
         tokenRepository.delete(token);
+    }
+
+    @Transactional
+    public void requestReset(@Valid PasswordResetRequest passwordResetRequest) {
+
+        log.info("AUTHENTICATION SERVICE reset password request for email={}", passwordResetRequest.email());
+
+        User user = userRepository.findByEmail(passwordResetRequest.email())
+                .orElse(null);
+
+        if (user == null) {
+            return;
+        }
+
+        String token = UUID.randomUUID().toString();
+
+        PasswordResetToken resetToken = PasswordResetToken.builder()
+                .user(user)
+                .token(token)
+                .expiresAt(LocalDateTime.now().plusMinutes(15))
+                .used(false)
+                .build();
+
+        passwordResetTokenRepository.save(resetToken);
+
+        eventPublisher.publishEvent(
+                new PasswordResetRequestedEvent(
+                        user.getEmail(),
+                        user.getFirstName(),
+                        token
+                )
+        );
+    }
+
+    @Transactional
+    public void resetPassword(@Valid PasswordResetConfirm request) {
+
+        PasswordResetToken token = passwordResetTokenRepository
+                .findByToken(request.token())
+                .orElseThrow(() -> new NotFoundException("Reset token not found"));
+
+        if (token.isUsed()) {
+            throw new ConflictException("Reset token already used");
+        }
+
+        if (token.getExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new UnauthorizedException("Refresh token expired");
+        }
+
+        User user = token.getUser();
+
+        if (user == null) {
+            throw new NotFoundException("User not found for token");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
+
+        //token zuzyty!
+        token.setUsed(true);
+
+        userRepository.save(user);
+        passwordResetTokenRepository.save(token);
+
+        log.info("AUTH SERVICE reset password confirmed");
     }
 
 }

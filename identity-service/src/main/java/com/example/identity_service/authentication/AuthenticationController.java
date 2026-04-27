@@ -26,7 +26,6 @@ public class AuthenticationController {
 
     public static final String AUTHENTICATION_PATH = "/api/auth";
     private final AuthenticationService authenticationService;
-    private final UserMapper userMapper;
 
     @Operation(
             summary = "Register a new user",
@@ -80,6 +79,47 @@ public class AuthenticationController {
         AuthenticationResponse response = authenticationService.authenticate(request);
 
         return ResponseEntity.ok(response);
+    }
+
+    @Operation(
+            summary = "Request password reset",
+            description = "Sends password reset email with a one-time token link. User does not need to be authenticated.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "204",
+                            description = "Reset email sent (if user exists)"
+                    )
+            }
+    )
+    @PostMapping("/password-reset/request")
+    public ResponseEntity<Void> requestReset(@RequestBody @Valid PasswordResetRequest passwordResetRequest) {
+
+        authenticationService.requestReset(passwordResetRequest);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(
+            summary = "Confirm password reset",
+            description = "Resets user password using valid reset token from email link.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "204",
+                            description = "Password successfully reset"
+                    ),
+                    @ApiResponse(
+                            responseCode = "400",
+                            description = "Invalid or expired token",
+                            content = @Content(schema = @Schema(implementation = ApiError.class))
+                    )
+            }
+    )
+    @PostMapping("/password-reset/confirm")
+    public ResponseEntity<Void> resetPassword(@RequestBody @Valid PasswordResetConfirm passwordResetConfirm) {
+
+        authenticationService.resetPassword(passwordResetConfirm);
+
+        return ResponseEntity.noContent().build();
     }
 
     @Operation(

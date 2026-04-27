@@ -107,4 +107,27 @@ public class UserController {
 
         return ResponseEntity.ok(updated);
     }
+
+    @Operation(
+            summary = "Delete user",
+            description = "Allows authenticated user to delete their account.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "204",
+                            description = "User deleted successfully"
+                    ),
+                    @ApiResponse(
+                            responseCode = "401",
+                            description = "Missing or invalid JWT token",
+                            content = @Content(schema = @Schema(implementation = ApiError.class))
+                    )
+            }
+    )
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> deleteUser(Authentication authentication) {
+        userService.deleteUser(authentication);
+
+        return ResponseEntity.noContent().build();
+    }
+
 }
