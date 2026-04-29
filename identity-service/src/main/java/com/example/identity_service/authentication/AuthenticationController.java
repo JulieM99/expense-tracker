@@ -2,6 +2,7 @@ package com.example.identity_service.authentication;
 
 import com.example.identity_service.authentication.dto.*;
 import com.example.identity_service.error.ApiError;
+import com.example.identity_service.user.User;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -11,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -151,9 +154,11 @@ public class AuthenticationController {
                     )
             }
     )
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(@Valid @RequestBody RefreshTokenRequest request) {
-        authenticationService.logout(request.token());
+    public ResponseEntity<Void> logout(Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        authenticationService.logout(user);
         return ResponseEntity.noContent().build();
     }
 

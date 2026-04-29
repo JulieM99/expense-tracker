@@ -135,14 +135,12 @@ public class AuthenticationService {
     }
 
     @Transactional
-    public void logout(String refreshToken) {
+    public void logout(User user) {
 
-        log.info("AUTHENTICATION SERVICE logout");
+        log.info("AUTHENTICATION SERVICE logout for user={}", user.getEmail());
 
-        Token token = tokenRepository.findByRefreshToken(refreshToken)
-                .orElseThrow(() -> new UnauthorizedException("Invalid refresh token"));
-
-        tokenRepository.delete(token);
+        tokenRepository.findByUser(user)
+                .ifPresent(tokenRepository::delete);
     }
 
     @Transactional
@@ -163,7 +161,6 @@ public class AuthenticationService {
                 .user(user)
                 .token(token)
                 .expiresAt(LocalDateTime.now().plusMinutes(15))
-                .used(false)
                 .build();
 
         passwordResetTokenRepository.save(resetToken);
@@ -184,10 +181,6 @@ public class AuthenticationService {
                 .findByToken(request.token())
                 .orElseThrow(() -> new NotFoundException("Reset token not found"));
 
-        if (token.isUsed()) {
-            throw new ConflictException("Reset token already used");
-        }
-
         if (token.getExpiresAt().isBefore(LocalDateTime.now())) {
             throw new UnauthorizedException("Refresh token expired");
         }
@@ -200,11 +193,9 @@ public class AuthenticationService {
 
         user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
 
-        //token zuzyty!
-        token.setUsed(true);
+        passwordResetTokenRepository.delete(token);
 
         userRepository.save(user);
-        passwordResetTokenRepository.save(token);
 
         log.info("AUTH SERVICE reset password confirmed");
     }

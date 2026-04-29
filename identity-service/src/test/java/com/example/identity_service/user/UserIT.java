@@ -10,9 +10,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -33,6 +36,9 @@ public class UserIT {
     JwtService jwtService;
     @Autowired
     TestData testData;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
 
     private User user;
     private String token;
@@ -57,21 +63,31 @@ public class UserIT {
                 .andExpect(jsonPath("$.email").value(user.getEmail()))
                 .andExpect(jsonPath("$.firstName").value(user.getFirstName()))
                 .andExpect(jsonPath("$.lastName").value(user.getLastName()));
+
+        User dbUser = userRepository.findById(user.getId()).orElseThrow();
+
+        assertEquals(user.getEmail(), dbUser.getEmail());
     }
 
     @Test
     void shouldChangePassword() throws Exception {
 
+        String newPassword = "password1234";
+
         mockMvc.perform(post("/api/users/change-password")
                         .header("Authorization", token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                {
-                    "oldPassword": "password123",
-                    "newPassword": "password1234"
-                }
-            """))
+            {
+                "oldPassword": "password123",
+                "newPassword": "%s"
+            }
+        """.formatted(newPassword)))
                 .andExpect(status().isNoContent());
+
+        User updated = userRepository.findById(user.getId()).orElseThrow();
+
+        assertTrue(passwordEncoder.matches(newPassword, updated.getPasswordHash()));
     }
 
     @Test
@@ -90,6 +106,11 @@ public class UserIT {
                 .andExpect(jsonPath("$.email").value(user.getEmail()))
                 .andExpect(jsonPath("$.firstName").value("Jane"))
                 .andExpect(jsonPath("$.lastName").value("Doe"));
+
+        User updated = userRepository.findById(user.getId()).orElseThrow();
+
+        assertEquals("Jane", updated.getFirstName());
+        assertEquals("Doe", updated.getLastName());
     }
 
     @Test
@@ -97,12 +118,16 @@ public class UserIT {
         mockMvc.perform(delete("/api/users/me")
                         .header("Authorization", token))
                 .andExpect(status().isNoContent());
+
+        assertTrue(userRepository.findById(user.getId()).isEmpty());
     }
 
     @Test
     void shouldReturn401WhenNoToken() throws Exception {
         mockMvc.perform(get("/api/users/me"))
                 .andExpect(status().isUnauthorized());
+
+        assertTrue(userRepository.findById(user.getId()).isPresent());
     }
 
     @Test
@@ -117,6 +142,10 @@ public class UserIT {
                         }
                     """))
                 .andExpect(status().isUnauthorized());
+
+        User dbUser = userRepository.findById(user.getId()).orElseThrow();
+
+        assertTrue(passwordEncoder.matches("password123", dbUser.getPasswordHash()));
     }
 
     @Test

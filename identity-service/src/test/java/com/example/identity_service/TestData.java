@@ -1,9 +1,12 @@
 package com.example.identity_service;
 
 import com.example.identity_service.authentication.Role;
+import com.example.identity_service.authentication.Token;
 import com.example.identity_service.user.User;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+
+import java.time.LocalDateTime;
 
 @Component
 public class TestData {
@@ -20,6 +23,18 @@ public class TestData {
                 .passwordHash(passwordEncoder.encode("password123"))
                 .role(Role.ROLE_USER)
                 .firstName("John")
-                .lastName("Doe");
+                .firstName("John")
+                .lastName("Doe")
+                .isActive(true);
+    }
+
+    public Token.TokenBuilder tokenBuilder() {
+        String randomToken = java.util.UUID.randomUUID().toString();
+        return Token.builder()
+                .user(null)
+                .refreshToken(randomToken)
+                .createdAt(LocalDateTime.now())
+                .expiresAt(java.time.LocalDateTime.now().plusDays(7))
+                .revoked(false);
     }
 }

@@ -2,6 +2,7 @@ package com.example.identity_service.common.event;
 
 import com.example.identity_service.common.email.EmailService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
@@ -13,6 +14,7 @@ public class UserEventListener {
 
     private final EmailService emailService;
 
+    @Profile("!test")
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleUserRegistered(UserRegisteredEvent event) {
@@ -22,6 +24,7 @@ public class UserEventListener {
         );
     }
 
+    @Profile("!test")
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleDeleteUser (UserDeleteEvent event){
@@ -31,6 +34,7 @@ public class UserEventListener {
         );
     }
 
+    @Profile("!test")
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handlePasswordResetRequested(PasswordResetRequestedEvent event) {

@@ -33,12 +33,8 @@ public class PasswordResetToken {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @Column(name = "used", nullable = false)
-    private boolean used;
-
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
-        this.used = false;
     }
 }
