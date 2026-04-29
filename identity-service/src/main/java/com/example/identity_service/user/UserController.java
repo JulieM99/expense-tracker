@@ -13,6 +13,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -44,6 +45,7 @@ public class UserController {
                     )
             }
     )
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/me")
     public ResponseEntity<UserDto> me(Authentication authentication) {
         User user = (User) authentication.getPrincipal();
@@ -71,6 +73,7 @@ public class UserController {
                     )
             }
     )
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/change-password")
     public ResponseEntity<Void> changePassword(Authentication authentication, @Valid @RequestBody ChangePasswordRequest request) {
         User user = (User) authentication.getPrincipal();
@@ -99,6 +102,7 @@ public class UserController {
                     )
             }
     )
+    @PreAuthorize("isAuthenticated()")
     @PatchMapping("/me")
     public ResponseEntity<UserDto> updateUserData(Authentication authentication, @Valid @RequestBody UpdateUserRequest request) {
         User user = (User) authentication.getPrincipal();
@@ -124,6 +128,7 @@ public class UserController {
             }
     )
     @DeleteMapping("/me")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> deleteUser(Authentication authentication) {
         User user = (User) authentication.getPrincipal();
         userService.deleteUser(user);
