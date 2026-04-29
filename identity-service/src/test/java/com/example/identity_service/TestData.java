@@ -23,7 +23,6 @@ public class TestData {
                 .passwordHash(passwordEncoder.encode("password123"))
                 .role(Role.ROLE_USER)
                 .firstName("John")
-                .firstName("John")
                 .lastName("Doe")
                 .isActive(true);
     }

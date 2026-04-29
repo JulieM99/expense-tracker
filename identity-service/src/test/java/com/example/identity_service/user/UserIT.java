@@ -29,16 +29,15 @@ import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequ
 public class UserIT {
 
     @Autowired
-    UserRepository userRepository;
+    private UserRepository userRepository;
     @Autowired
-    MockMvc mockMvc;
+    private MockMvc mockMvc;
     @Autowired
-    JwtService jwtService;
+    private JwtService jwtService;
     @Autowired
-    TestData testData;
+    private TestData testData;
     @Autowired
     private PasswordEncoder passwordEncoder;
-
 
     private User user;
     private String token;
@@ -46,6 +45,7 @@ public class UserIT {
     @BeforeEach
     public void setUp() {
         user = userRepository.save(testData.userBuilder().build());
+
         token = "Bearer " + jwtService.generateToken(user);
     }
 

@@ -82,8 +82,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         } catch (ExpiredJwtException e) {
             writeError(response, request, "Token expired");
+        } catch (io.jsonwebtoken.JwtException e) {
+            writeError(response, request, "Invalid token");
         } catch (Exception e) {
-            writeError(response, request, "Invalid or malformed token");
+            filterChain.doFilter(request, response);
         }
     }
 

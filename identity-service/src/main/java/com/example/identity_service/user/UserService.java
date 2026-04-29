@@ -20,9 +20,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class UserService {
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
+    private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final ApplicationEventPublisher eventPublisher;
