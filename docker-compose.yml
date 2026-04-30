@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
 
-  mysql:
+  identity-mysql:
     image: mysql:8
     container_name: identity-mysql
     restart: always
@@ -16,6 +16,20 @@ services:
     ports:
       - "3306:3306"
 
+  budget-mysql:
+    image: mysql:8
+    container_name: budget-mysql
+    restart: always
+    healthcheck:
+      test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost" ]
+      timeout: 5s
+      retries: 10
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: budget_db
+    ports:
+      - "3307:3306"
+
   identity-service:
     build:
       context: .
@@ -24,9 +38,27 @@ services:
     ports:
       - "8081:8080"
     depends_on:
-      mysql:
+      identity-mysql:
         condition: service_healthy
     environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://identity-mysql:3306/identity_db
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
       SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME}
       SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD}
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+
+  budget-service:
+    build:
+      context: .
+      dockerfile: budget-service/Dockerfile
+    container_name: budget-service
+    ports:
+      - "8082:8080"
+    depends_on:
+      budget-mysql:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://budget-mysql:3306/budget_db
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root

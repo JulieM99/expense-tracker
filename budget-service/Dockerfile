@@ -12,10 +12,10 @@ RUN mvn install -N
 COPY auth-common/src ./auth-common/src
 RUN mvn -f auth-common/pom.xml install -DskipTests
 
-COPY identity-service/src ./identity-service/src
-RUN mvn -f identity-service/pom.xml package -DskipTests
+COPY budget-service/src ./budget-service/src
+RUN mvn -f budget-service/pom.xml package -DskipTests
 
 FROM eclipse-temurin:17-jdk-alpine
 WORKDIR /app
-COPY --from=build /app/identity-service/target/*.jar app.jar
+COPY --from=build /app/budget-service/target/*.jar app.jar
 ENTRYPOINT ["java","-jar","app.jar"]
