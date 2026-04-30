@@ -4,6 +4,7 @@ import com.example.identity_service.TestData;
 import com.example.identity_service.user.User;
 import com.example.identity_service.user.UserRepository;
 import jakarta.transaction.Transactional;
+import org.example.authcommon.JwtService;
 import org.hibernate.AssertionFailure;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -37,11 +38,11 @@ public class AuthenticationIT {
     @Autowired
     private MockMvc mockMvc;
     @Autowired
-    private JwtService jwtService;
-    @Autowired
     private TestData testData;
     @Autowired
     private PasswordEncoder passwordEncoder;
+    @Autowired
+    private JwtService jwtService;
 
 
     @Test
@@ -143,7 +144,7 @@ public class AuthenticationIT {
 
         User user = userRepository.save(testData.userBuilder().build());
 
-        String jwt = jwtService.generateToken(user);
+        String realToken = jwtService.generateToken(java.util.Map.of("id", user.getId()), user.getEmail());
 
         Token token = testData.tokenBuilder()
                 .user(user)
@@ -151,7 +152,7 @@ public class AuthenticationIT {
         tokenRepository.save(token);
 
         mockMvc.perform(post("/api/auth/logout")
-                        .header("Authorization", "Bearer " + jwt))
+                        .header("Authorization", "Bearer " + realToken))
                 .andExpect(status().isNoContent());
 
         assertTrue(tokenRepository.findByUser(user).isEmpty());

@@ -2,8 +2,8 @@ package com.example.identity_service.user;
 
 
 import com.example.identity_service.TestData;
-import com.example.identity_service.authentication.JwtService;
 import jakarta.transaction.Transactional;
+import org.example.authcommon.JwtService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,7 +20,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import org.springframework.http.MediaType;
-import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
 
 @ActiveProfiles("test")
 @SpringBootTest
@@ -46,7 +45,13 @@ public class UserIT {
     public void setUp() {
         user = userRepository.save(testData.userBuilder().build());
 
-        token = "Bearer " + jwtService.generateToken(user);
+        token = "Bearer " + jwtService.generateToken(
+                java.util.Map.of(
+                        "id", user.getId(),
+                        "email", user.getEmail()
+                ),
+                user.getEmail()
+        );
     }
 
     @AfterEach

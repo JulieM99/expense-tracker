@@ -1,6 +1,5 @@
 package com.example.identity_service.config;
 
-import com.example.identity_service.authentication.JwtService;
 import com.example.identity_service.user.UserRepository;
 import com.example.identity_service.error.ApiError;
 import com.example.identity_service.user.User;
@@ -17,6 +16,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.example.authcommon.JwtService;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -59,7 +59,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                         .orElse(null);
 
                 // sprawdzenie pobranego usera i czy jwt token jest wazny
-                if (userDetails != null && jwtService.isTokenValid(jwt, userDetails)) {
+                if (userDetails != null && jwtService.isTokenValid(jwt, userEmail)) {
 
                     // utworzenie authentication object
                     UsernamePasswordAuthenticationToken authToken =

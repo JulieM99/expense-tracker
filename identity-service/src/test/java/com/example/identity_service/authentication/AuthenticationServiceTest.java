@@ -9,6 +9,7 @@ import com.example.identity_service.user.User;
 import com.example.identity_service.user.UserMapper;
 import com.example.identity_service.user.UserRepository;
 import com.example.identity_service.user.dto.UserDto;
+import org.example.authcommon.JwtService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -45,6 +46,7 @@ public class AuthenticationServiceTest {
     private PasswordEncoder passwordEncoder;
     @Mock
     private ApplicationEventPublisher eventPublisher;
+
     @InjectMocks
     private AuthenticationService authenticationService;
 
@@ -63,7 +65,7 @@ public class AuthenticationServiceTest {
         when(userRepository.findByEmail(request.email())).thenReturn(Optional.empty());
         when(userMapper.toEntity(request)).thenReturn(user);
         when(passwordEncoder.encode("pass")).thenReturn("encoded");
-        when(jwtService.generateToken(user)).thenReturn("jwt");
+        when(jwtService.generateToken(anyMap(), eq("test@test.com"))).thenReturn("jwt");
         when(userMapper.toDto(user)).thenReturn(userDto);
         when(tokenRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
@@ -89,7 +91,7 @@ public class AuthenticationServiceTest {
         UserDto dto = mock(UserDto.class);
 
         when(userRepository.findByEmail("test@test.com")).thenReturn(Optional.of(user));
-        when(jwtService.generateToken(user)).thenReturn("jwt");
+        when(jwtService.generateToken(anyMap(), eq("test@test.com"))).thenReturn("jwt");
         when(userMapper.toDto(user)).thenReturn(dto);
         when(tokenRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
@@ -135,7 +137,7 @@ public class AuthenticationServiceTest {
         when(tokenRepository.findByRefreshToken("refresh"))
                 .thenReturn(Optional.of(token));
 
-        when(jwtService.generateToken(user)).thenReturn("jwt");
+        when(jwtService.generateToken(anyMap(), eq("test@test.com"))).thenReturn("jwt");
         when(userMapper.toDto(user)).thenReturn(dto);
         when(tokenRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 

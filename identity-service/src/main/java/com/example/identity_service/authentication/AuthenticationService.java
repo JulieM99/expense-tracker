@@ -14,8 +14,7 @@ import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.coyote.BadRequestException;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.example.authcommon.JwtService;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -23,6 +22,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 
@@ -55,7 +56,7 @@ public class AuthenticationService {
         user.setPasswordHash(passwordEncoder.encode(request.password()));
         userRepository.save(user);
 
-        String jwtToken = jwtService.generateToken(user);
+        String jwtToken = generateJwt(user);
         String refreshToken = saveRefreshToken(user);
 
         UserDto userDto = userMapper.toDto(user);
@@ -88,8 +89,10 @@ public class AuthenticationService {
 
         log.info("AUTHENTICATION SERVICE login SUCCESS email={}", request.email());
 
+        String jwtToken = generateJwt(user);
+
         return new AuthenticationResponse(
-                jwtService.generateToken(user),
+                jwtToken,
                 saveRefreshToken(user),
                 userMapper.toDto(user)
         );
@@ -109,8 +112,10 @@ public class AuthenticationService {
 
         User user = storedToken.getUser();
 
+        String jwtToken = generateJwt(user);
+
         return new AuthenticationResponse(
-                jwtService.generateToken(user),
+                jwtToken,
                 saveRefreshToken(user),
                 userMapper.toDto(user)
         );
@@ -198,6 +203,14 @@ public class AuthenticationService {
         userRepository.save(user);
 
         log.info("AUTH SERVICE reset password confirmed");
+    }
+
+    private String generateJwt(User user) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("id", user.getId());
+        claims.put("email", user.getEmail());
+
+        return jwtService.generateToken(claims, user.getEmail());
     }
 
 }

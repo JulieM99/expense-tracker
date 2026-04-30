@@ -6,6 +6,7 @@ import com.example.identity_service.error.GlobalExceptionHandler;
 import com.example.identity_service.error.exception.ConflictException;
 import com.example.identity_service.user.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.example.authcommon.JwtService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -13,6 +14,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -37,6 +39,8 @@ class AuthenticationControllerTest {
     UserRepository userRepository;
     @MockBean
     JwtAuthFilter jwtAuthFilter;
+    @MockBean
+    private JavaMailSender javaMailSender;
 
     @Test
     void shouldReturn400WhenPasswordIsTooShort() throws Exception {

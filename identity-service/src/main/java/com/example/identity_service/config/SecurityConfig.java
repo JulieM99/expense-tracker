@@ -2,6 +2,7 @@ package com.example.identity_service.config;
 
 import com.example.identity_service.user.UserRepository;
 import jakarta.servlet.http.HttpServletResponse;
+import org.example.authcommon.JwtService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
